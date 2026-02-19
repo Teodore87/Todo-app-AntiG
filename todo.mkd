@@ -1,0 +1,31 @@
+## Simple Todo App
+
+### Features
+- Add todos
+- Delete todos
+- Mark todos as completed
+- Filter todos (all, active, completed)
+- Local storage
+- Move todos up and down
+- Edit todos
+
+### Language
+- HTML
+- CSS
+- Python
+
+### Database
+- SQLite
+
+### Framework
+- Flask
+
+### Deployment
+- Render
+
+### Other
+- Git
+- GitHub (for version control. Make sure no API-keys or secrets are leaked.)
+
+### Comments
+- Add comments to each step in the code
