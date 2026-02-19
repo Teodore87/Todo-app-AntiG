@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antigravity Todo</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="description" content="A premium and sleek todo application built with Flask and SQLite.">
+</head>
+<body>
+    <div class="container">
+        <h1>Antigravity Todos</h1>
+        
+        <!-- Add Todo Form -->
+        <form action="{{ url_for('add_todo') }}" method="POST" class="input-group">
+            <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off">
+            <button type="submit" class="add-btn">Add</button>
+        </form>
+
+        <!-- Filters -->
+        <div class="filters">
+            <a href="{{ url_for('index', filter='all') }}" class="filter-btn {{ 'active' if current_filter == 'all' }}">All</a>
+            <a href="{{ url_for('index', filter='active') }}" class="filter-btn {{ 'active' if current_filter == 'active' }}">Active</a>
+            <a href="{{ url_for('index', filter='completed') }}" class="filter-btn {{ 'active' if current_filter == 'completed' }}">Completed</a>
+        </div>
+
+        <!-- Todo List -->
+        <ul class="todo-list">
+            {% for todo in todos %}
+            <li class="todo-item {{ 'completed' if todo.completed }}" id="todo-{{ todo.id }}">
+                <a href="{{ url_for('toggle_todo', todo_id=todo.id, filter=current_filter) }}" class="action-btn">
+                    <i class="fa-regular {{ 'fa-circle-check' if todo.completed else 'fa-circle' }}"></i>
+                </a>
+                
+                <div class="todo-content">
+                    <span class="todo-text" onclick="enableEdit({{ todo.id }})">{{ todo.title }}</span>
+                    <form action="{{ url_for('edit_todo', todo_id=todo.id) }}" method="POST" class="edit-form" id="edit-form-{{ todo.id }}">
+                        <input type="text" name="title" value="{{ todo.title }}" onblur="this.form.submit()">
+                    </form>
+                </div>
+
+                <div class="actions">
+                    <a href="{{ url_for('move_todo', todo_id=todo.id, direction='up') }}" class="action-btn move-btn">
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </a>
+                    <a href="{{ url_for('move_todo', todo_id=todo.id, direction='down') }}" class="action-btn move-btn">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </a>
+                    <a href="{{ url_for('delete_todo', todo_id=todo.id) }}" class="action-btn delete-btn" onclick="return confirm('Delete this todo?')">
+                        <i class="fa-solid fa-trash"></i>
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
