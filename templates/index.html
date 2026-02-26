@@ -3,57 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Todo</title>
+    <title>Antigravity Todo - {{ current_list.name }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <meta name="description" content="A premium and sleek todo application built with Flask and SQLite.">
 </head>
 <body>
-    <div class="container">
-        <h1>Antigravity Todos</h1>
-        
-        <!-- Add Todo Form -->
-        <form action="{{ url_for('add_todo') }}" method="POST" class="input-group">
-            <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off">
-            <button type="submit" class="add-btn">Add</button>
-        </form>
-
-        <!-- Filters -->
-        <div class="filters">
-            <a href="{{ url_for('index', filter='all') }}" class="filter-btn {{ 'active' if current_filter == 'all' }}">All</a>
-            <a href="{{ url_for('index', filter='active') }}" class="filter-btn {{ 'active' if current_filter == 'active' }}">Active</a>
-            <a href="{{ url_for('index', filter='completed') }}" class="filter-btn {{ 'active' if current_filter == 'completed' }}">Completed</a>
-        </div>
-
-        <!-- Todo List -->
-        <ul class="todo-list">
-            {% for todo in todos %}
-            <li class="todo-item {{ 'completed' if todo.completed }}" id="todo-{{ todo.id }}">
-                <a href="{{ url_for('toggle_todo', todo_id=todo.id, filter=current_filter) }}" class="action-btn">
-                    <i class="fa-regular {{ 'fa-circle-check' if todo.completed else 'fa-circle' }}"></i>
-                </a>
-                
-                <div class="todo-content">
-                    <span class="todo-text" onclick="enableEdit({{ todo.id }})">{{ todo.title }}</span>
-                    <form action="{{ url_for('edit_todo', todo_id=todo.id) }}" method="POST" class="edit-form" id="edit-form-{{ todo.id }}">
-                        <input type="text" name="title" value="{{ todo.title }}" onblur="this.form.submit()">
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fa-solid fa-list-ul"></i> Lists</h2>
+            </div>
+            <ul class="list-collection">
+                {% for list in lists %}
+                <li class="list-item {{ 'active' if list.id == current_list.id }}">
+                    <a href="{{ url_for('index', list_id=list.id) }}">{{ list.name }}</a>
+                    {% if lists|length > 1 %}
+                    <form action="{{ url_for('delete_list', list_id=list.id) }}" method="POST" class="delete-list-form" onsubmit="return confirm('Delete this list and all its tasks?')">
+                        <button type="submit" class="delete-list-btn" title="Delete List"><i class="fa-solid fa-xmark"></i></button>
                     </form>
-                </div>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            <form action="{{ url_for('add_list') }}" method="POST" class="add-list-form">
+                <input type="text" name="name" placeholder="New list name..." required autocomplete="off">
+                <button type="submit"><i class="fa-solid fa-plus"></i></button>
+            </form>
+        </aside>
 
-                <div class="actions">
-                    <a href="{{ url_for('move_todo', todo_id=todo.id, direction='up') }}" class="action-btn move-btn">
-                        <i class="fa-solid fa-chevron-up"></i>
-                    </a>
-                    <a href="{{ url_for('move_todo', todo_id=todo.id, direction='down') }}" class="action-btn move-btn">
-                        <i class="fa-solid fa-chevron-down"></i>
-                    </a>
-                    <a href="{{ url_for('delete_todo', todo_id=todo.id) }}" class="action-btn delete-btn" onclick="return confirm('Delete this todo?')">
-                        <i class="fa-solid fa-trash"></i>
-                    </a>
+        <!-- Main Content -->
+        <main class="container">
+            <header>
+                <h1>{{ current_list.name }}</h1>
+                <!-- Filters -->
+                <div class="filters">
+                    <a href="{{ url_for('index', list_id=current_list.id, filter='all') }}" class="filter-btn {{ 'active' if current_filter == 'all' }}">All</a>
+                    <a href="{{ url_for('index', list_id=current_list.id, filter='active') }}" class="filter-btn {{ 'active' if current_filter == 'active' }}">Active</a>
+                    <a href="{{ url_for('index', list_id=current_list.id, filter='completed') }}" class="filter-btn {{ 'active' if current_filter == 'completed' }}">Completed</a>
                 </div>
-            </li>
-            {% endfor %}
-        </ul>
+            </header>
+            
+            <!-- Add Todo Form -->
+            <form action="{{ url_for('add_todo', list_id=current_list.id) }}" method="POST" class="input-group-container">
+                <div class="input-group">
+                    <input type="text" name="title" placeholder="What needs to be done?" required autocomplete="off">
+                    <button type="submit" class="add-btn">Add</button>
+                </div>
+                <textarea name="description" placeholder="Extra info (optional)..." rows="2"></textarea>
+            </form>
+
+            <!-- Todo List -->
+            <ul class="todo-list">
+                {% for todo in todos %}
+                <li class="todo-item {{ 'completed' if todo.completed }}" id="todo-{{ todo.id }}">
+                    <div class="todo-main">
+                        <a href="{{ url_for('toggle_todo', todo_id=todo.id, filter=current_filter) }}" class="action-btn">
+                            <i class="fa-regular {{ 'fa-circle-check' if todo.completed else 'fa-circle' }}"></i>
+                        </a>
+                        
+                        <div class="todo-content">
+                            <span class="todo-text">{{ todo.title }}</span>
+                            <form action="{{ url_for('edit_todo', todo_id=todo.id) }}" method="POST" class="edit-form" id="edit-form-{{ todo.id }}">
+                                <input type="text" name="title" value="{{ todo.title }}" class="edit-title" onblur="saveTodo({{ todo.id }})">
+                                <textarea name="description" class="edit-description" placeholder="Description..." onblur="saveTodo({{ todo.id }})">{{ todo.description or '' }}</textarea>
+                            </form>
+                            {% if todo.description %}
+                            <p class="todo-description">{{ todo.description }}</p>
+                            {% endif %}
+                        </div>
+
+                        <div class="actions">
+                            <button type="button" class="action-btn edit-btn" onclick="enableEdit({{ todo.id }})" title="Edit Task">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <a href="{{ url_for('move_todo', todo_id=todo.id, direction='up') }}" class="action-btn move-btn">
+                                <i class="fa-solid fa-chevron-up"></i>
+                            </a>
+                            <a href="{{ url_for('move_todo', todo_id=todo.id, direction='down') }}" class="action-btn move-btn">
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </a>
+                            <a href="{{ url_for('delete_todo', todo_id=todo.id) }}" class="action-btn delete-btn" onclick="return confirm('Delete this todo?')">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </main>
     </div>
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
